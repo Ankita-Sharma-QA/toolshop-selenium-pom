@@ -1,0 +1,52 @@
+# Regression tests: the full test suite in Chrome and Firefox.
+# Runs every night, and can be started by hand from the Actions tab.
+name: Regression Tests
+
+on:
+  schedule:
+    - cron: '30 20 * * *'   # every day at 20:30 UTC = 02:00 IST
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    strategy:
+      fail-fast: false          # if Chrome fails, still finish the Firefox run
+      matrix:
+        browser: [ chrome, firefox ]
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Start the Toolshop app in Docker
+        run: bash docker/start-app.sh
+
+      - name: Run regression suite (${{ matrix.browser }}, headless)
+        run: |
+          set -o pipefail
+          mvn -B test -Dsuite=regression -Dbrowser=${{ matrix.browser }} -Dheadless=true -DbaseUrl=http://localhost:4200 2>&1 | tee mvn-output.log
+
+      - name: Show test results on the run page
+        if: always()
+        run: python3 .github/scripts/test_summary.py
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: regression-report-${{ matrix.browser }}
+          path: |
+            target/reports/
+            target/screenshots/
+            target/surefire-reports/
+          retention-days: 14

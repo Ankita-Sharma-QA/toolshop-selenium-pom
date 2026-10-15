@@ -1,0 +1,10 @@
+target/
+test-output/
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.DS_Store
+mvn-output.log

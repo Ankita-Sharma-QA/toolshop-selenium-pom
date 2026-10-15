@@ -1,0 +1,43 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<!--
+  SMOKE SUITE: a few critical tests that check the most important flows.
+  Fast (a few minutes). Runs on every push / pull request.
+  Run locally: mvn test -Dsuite=smoke
+-->
+<suite name="Smoke Suite" parallel="classes" thread-count="3">
+
+    <listeners>
+        <listener class-name="com.toolshop.listeners.TestListener"/>
+        <listener class-name="com.toolshop.listeners.RetryListener"/>
+    </listeners>
+
+    <test name="Smoke Tests">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.toolshop.tests.LoginTests"/>
+            <class name="com.toolshop.tests.SearchAndFilterTests"/>
+            <class name="com.toolshop.tests.ProductTests"/>
+            <class name="com.toolshop.tests.CartTests"/>
+        </classes>
+    </test>
+
+    <!--
+      The end-to-end checkout runs on its own, after the tests above have finished.
+      It changes server-side data (cart, order, invoice), so running it alone keeps it
+      independent from the other tests and makes it stable.
+    -->
+    <test name="Checkout Flow">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.toolshop.tests.CheckoutTests"/>
+        </classes>
+    </test>
+</suite>
